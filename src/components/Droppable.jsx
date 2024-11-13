@@ -25,6 +25,7 @@ function Droppable(props) {
   });
   const style = {
     color: isOver ? 'green' : undefined,
+ 
   };
   
   
