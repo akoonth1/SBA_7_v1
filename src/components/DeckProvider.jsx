@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useMemo } from 'react';
 import { getDeck } from './APIcall';
 
 export const DeckContext = createContext(null);
@@ -14,8 +14,14 @@ const DeckProvider = ({ children }) => {
     fetchDeck();
   }, []);
 
+  const updateDeck = (newDeck) => {
+    setDeck(newDeck);
+  };
+
+  const value = useMemo(() => ({ deck, updateDeck }), [deck]);
+
   return (
-    <DeckContext.Provider value={deck}>
+    <DeckContext.Provider value={value}>
       {children}
     </DeckContext.Provider>
   );

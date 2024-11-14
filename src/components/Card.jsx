@@ -1,32 +1,3 @@
-// import React, { useState, useEffect } from 'react';
-
-// export const Card = ({ deckId, id, cards }) => {
-//   const [card, setCard] = useState(null);
-
-//   useEffect(() => {
-//     async function fetchCard() {
-//       const response = await fetch(`https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`);
-//       const data = await response.json();
-//       setCard(data.cards[0]);
-//     }
-//     fetchCard();
-//   }, [deckId]);
-
-//   return (
-//     <>
-//       {card ? (
-//         <div>
-//           <p>Card ID: {card.code}</p>
-//           <img src={card.image} alt={card.code} />
-//           <p>Card: {card.value} of {card.suit}</p>
-//           <p>{deckId}</p>
-//         </div>
-//       ) : (
-//         <p>Loading...</p>
-//       )}
-//     </>
-//   );
-// };
 
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
