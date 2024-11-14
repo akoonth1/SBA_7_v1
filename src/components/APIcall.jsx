@@ -1,42 +1,19 @@
-import {useState, useEffect} from "react";
-import Card from "./Card";
-export default function APIcall() {
 
 
+import React, { createContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
-    //set Deck
-    const [deck, setDeck] = useState({});
+const url = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1"
 
-const url ="https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1"
+export const DeckContext = createContext(null);
 
-
-async function getDeck() {
+export const getDeck = async () => {
     try {
-        const response = await fetch(url);
-        const data = await response.json();
-        console.log(data);
-        setDeck(data);
+        const response = await axios.get(url);
+        return response.data;
     } catch (error) {
         console.log(error);
-        setDeck({error: "An error occurred"});
+        return { error: "An error occurred" };
     }
-
 }
 
-useEffect(() => {
-    getDeck(setDeck);
-}
-, []);
-
-
-    return (
-        <div>
-        <h3>APIcall</h3>
-        {deck.remaining}
-        {/* {getDeck()} */}
-        <Card deckId={deck.deck_id}>
-                <h4>Card</h4>
-            </Card>
-        </div>
-    );
-    }

@@ -1,47 +1,39 @@
-import { useState } from 'react'
 
-import './App.css'
-
-import { DndContext } from '@dnd-kit/core'
-import { Draggable } from './components/Draggable'
-import { Droppable } from './components/Droppable'
-
-import APIcall from './components/APIcall'
-import Card from './components/Card'
+import React from 'react';
+import './App.css';
+import DeckProvider from './components/DeckProvider';
+import {DeckInfo} from './components/DeckInfo';
+import {HandInfo} from './pages/PlayerHand';
+import { Draggable } from './components/draggable';
+import { closestCorners, DndContext } from '@dnd-kit/core';
+import { Droppable } from './components/Droppable';
+import PlayArea from './pages/PlayArea';
 
 function App() {
-  const containers = ['A', 'B', 'C'];
-  const [parent, setParent] = useState(null);
-  const draggableMarkup = (
-    <Draggable id="draggable"> <APIcall /></Draggable>
-  );
 
-  return (
-    <>
-   
-    <DndContext onDragEnd={handleDragEnd}>
-      {parent === null ? draggableMarkup : null}
 
-      {containers.map((id) => (
-        // We updated the Droppable component so it would accept an `id`
-        // prop and pass it to `useDroppable`
-        <div className='droppable-box'>
-        <Droppable key={id} id={id} className='droppable-box'>
-          {parent === id ? draggableMarkup : 'Drop here'}
-        </Droppable>
-        </div>
-      ))}
-    </DndContext>
-    </>
-  );
-
-  function handleDragEnd(event) {
-    const {over} = event;
-
-    // If the item is dropped over a container, set it as the parent
-    // otherwise reset the parent to `null`
-    setParent(over ? over.id : null);
+  const handleDragEnd = (event) => {
+   const {active, over} = event;
+   if (active.id !== over.id) {
+    setCards((items) => {
+      const oldIndex = items.findIndex((item) => item.code === active.id);
+      const newIndex = items.findIndex((item) => item.code === over.id);
+      return arrayMove(items, oldIndex, newIndex);
+    });
   }
 };
 
-export default App
+  return (
+
+    <DeckProvider>
+      <DndContext collisionDetection={closestCorners}
+      onDragEnd={handleDragEnd}>
+        <PlayArea />
+      {/* <DeckInfo /> */}
+      <HandInfo />
+      </DndContext>
+    </DeckProvider>
+  );
+}
+
+export default App;

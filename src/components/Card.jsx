@@ -1,44 +1,54 @@
-import React, { useEffect, useState } from 'react';
+// import React, { useState, useEffect } from 'react';
 
-export default function Card(props) {
-    const card_url = `https://deckofcardsapi.com/api/deck/${props.deckId}/draw/?count=1`;
-     
-    const [card, setCard] = useState({});
+// export const Card = ({ deckId, id, cards }) => {
+//   const [card, setCard] = useState(null);
 
-    async function getCard() {
-        try {
-            const response = await fetch(card_url);
-            const data = await response.json();
-            console.log(data);
-            setCard(data.cards[0]); // Assuming the API returns an array of cards
-        } catch (error) {
-            console.log(error);
-            setCard({error: "An error occurred"});
-        }
-    }
+//   useEffect(() => {
+//     async function fetchCard() {
+//       const response = await fetch(`https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`);
+//       const data = await response.json();
+//       setCard(data.cards[0]);
+//     }
+//     fetchCard();
+//   }, [deckId]);
 
-    useEffect(() => {
-        if (props.deckId) {
-            getCard();
-        }
-    }, [props.deckId]);
-    
-    return (
-        <div>
-            <h3>Card</h3>
-            {props.deckId && (
-                <div>
-                    <p>Deck ID: {props.deckId}</p>
-                    {card.error ? (
-                        <p>{card.error}</p>
-                    ) : (
-                        <div>
-                            <p>Card: {card.value} of {card.suit}</p>
-                            <img src={card.image} alt={`${card.value} of ${card.suit}`} />
-                        </div>
-                    )}
-                </div>
-            )}
+//   return (
+//     <>
+//       {card ? (
+//         <div>
+//           <p>Card ID: {card.code}</p>
+//           <img src={card.image} alt={card.code} />
+//           <p>Card: {card.value} of {card.suit}</p>
+//           <p>{deckId}</p>
+//         </div>
+//       ) : (
+//         <p>Loading...</p>
+//       )}
+//     </>
+//   );
+// };
+
+import React from 'react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+export const Card = ({ card }) => {
+   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: card.code });
+const style = {
+    transform: CSS.Translate.toString(transform),
+    transition
+  };
+
+  return (
+    <>
+      {card ? (
+        <div ref={setNodeRef} {...attributes}{...listeners}  style={style}>
+          <p>Card ID: {card.code}</p>
+          <img src={card.image} alt={card.code} />
+          <p>Card: {card.value} of {card.suit}</p>
         </div>
-    );
-}
+      ) : (
+        <p>Loading...</p>
+      )}
+    </>
+  );
+};
