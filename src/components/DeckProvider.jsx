@@ -18,6 +18,12 @@ const DeckProvider = ({ children }) => {
     setDeck(newDeck);
   };
 
+  const removeCard = (card) => {
+    const newDeck = { ...deck };
+    newDeck.cards = deck.cards.filter((c) => c.code !== card.code);
+    updateDeck(newDeck);
+  }
+
   const value = useMemo(() => ({ deck, updateDeck }), [deck]);
 
   return (
@@ -28,3 +34,4 @@ const DeckProvider = ({ children }) => {
 };
 
 export default DeckProvider;
+

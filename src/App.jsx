@@ -1,23 +1,22 @@
-
 import React from 'react';
 import './App.css';
-import DeckProvider from './components/DeckProvider';
-import {DeckInfo} from './components/DeckInfo';
-import {HandInfo} from './pages/PlayerHand';
-import { Draggable } from './components/draggable';
-import { closestCorners, DndContext } from '@dnd-kit/core';
-import { Droppable } from './components/Droppable';
-import PlayArea from './pages/PlayArea';
+import DeckProvider from './components/DeckProvider'; // Corrected import path
 import HandProvider from './components/HandContext'; // Corrected import path
-
-
+import { HandInfo } from './pages/PlayerHand'; // Corrected import path
+import { DeckInfo } from './components/DeckInfo'; // Corrected import path
+import PlayArea from './pages/PlayArea'; // Corrected import path
+import { DndContext } from '@dnd-kit/core';
 
 function App() {
   return (
     <DeckProvider>
       <HandProvider>
-        <DeckInfo />
-        <HandInfo />
+        <DndContext>
+          {/* <DeckInfo /> */}
+          <HandInfo />
+          
+          {/* <PlayArea /> */}
+        </DndContext>
       </HandProvider>
     </DeckProvider>
   );

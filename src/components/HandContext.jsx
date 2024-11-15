@@ -5,6 +5,10 @@ export const HandContext = createContext(null);
 const HandProvider = ({ children }) => {
   const [hand, setHand] = useState([]);
 
+
+
+  
+
   return (
     <HandContext.Provider value={{ hand, setHand }}>
       {children}
