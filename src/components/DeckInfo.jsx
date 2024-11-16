@@ -14,7 +14,7 @@ export const DeckInfo = () => {
 
   return (
     <>
-      <h1>App</h1>
+      <h1>solitaire</h1>
       {deck ? (
         <div>
           <p>Deck ID: {deck.deck_id}</p>

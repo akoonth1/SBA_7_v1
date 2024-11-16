@@ -12,7 +12,7 @@ function App() {
     <DeckProvider>
       <HandProvider>
         <DndContext>
-          {/* <DeckInfo /> */}
+          <DeckInfo />
           <HandInfo />
           
           {/* <PlayArea /> */}

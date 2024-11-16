@@ -23,6 +23,7 @@
 //       )}
 //     </>
 //   );
+// };
 
 
 import React from 'react';
@@ -40,9 +41,9 @@ export const Card = ({ card }) => {
 
   return (
     <div ref={setNodeRef} className="card" style={style} {...attributes} {...listeners}>
-      <p>Card ID: {card.code}</p>
+      {/* <h5>Card ID: {card.code}</h5> */}
       <img src={card.image} alt={card.code} />
-      <p>Card: {card.value} of {card.suit}</p>
+      {/* <p>Card: {card.value} of {card.suit}</p> */}
     </div>
   );
 };
