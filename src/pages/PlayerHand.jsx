@@ -6,28 +6,36 @@ import { DeckContext } from '../components/DeckProvider';
 import { HandContext } from '../components/HandContext'; 
 import { Card } from '../components/Card'; 
 import "./PlayerHand.css";
-import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
-import { DndContext, closestCenter, useDroppable } from '@dnd-kit/core';
+import { horizontalListSortingStrategy, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { DndContext, closestCenter, useDroppable, DragOverlay, closestCorners, rectIntersection } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import DrawCardButton from '../components/DrawCardButton'; 
 import { useSortable } from '@dnd-kit/sortable';
 import CardCodetoValue from '../components/GameLogic';
 
 export const HandInfo = () => {
+
   const { deck, updateDeck } = useContext(DeckContext);
+
   const { hand, setHand } = useContext(HandContext);
+
   const [handSize, setHandSize] = useState(4);
+
   const [columns, setColumns] = useState({
-    'column-1': { cards: [], lastCardValue: 14 },
-    'column-2': { cards: [], lastCardValue: 14 },
-    'column-3': { cards: [], lastCardValue: 14 },
-    'column-4': { cards: [], lastCardValue: 14 },
-    'column-5': { cards: [], lastCardValue: 14 },
-    'column-6': { cards: [], lastCardValue: 14 },
-    'column-7': { cards: [], lastCardValue: 14 },
-    'column-8': { cards: [], lastCardValue: 14 },
+    'column-1': { cards: [], lastCardValue: null },
+    'column-2': { cards: [], lastCardValue: null },
+    'column-3': { cards: [], lastCardValue: null },
+    'column-4': { cards: [], lastCardValue: null },
+    'column-5': { cards: [], lastCardValue: null},
+    'column-6': { cards: [], lastCardValue: null },
+    'column-7': { cards: [], lastCardValue: null},
+    'column-8': { cards: [], lastCardValue: null },
   });
 
+
+  const [activeDragItem, setActiveDragItem] = useState(null);
+
+  //Infinte loop will occur if deck is included in the dependency array
   useEffect(() => {
     async function fetchCards() {
       if (deck && deck.deck_id) {
@@ -43,71 +51,106 @@ export const HandInfo = () => {
     fetchCards();
   }, []);
 
- 
   const handleDragEnd = (event) => {
     const { active, over } = event;
-
+  
     if (!over) return;
+  
+    const activeId = active.id;
+    const overId = over.id;
+  
+    // Find the column IDs
+    const fromColumnId = Object.keys(columns).find((key) =>
+      columns[key].cards.some((item) => item.code === activeId)
+    );
+    const toColumnId = overId;
+  
+    if (!fromColumnId || !toColumnId) return;
+  
+    // Check if the move is within the same column
+    const isSameColumn = fromColumnId === toColumnId;
+  
+    // Identify restricted columns (columns 2 to 8)
+    const restrictedColumns = [
+      'column-2',
+      'column-3',
+      'column-4',
+      'column-5',
+      'column-6',
+      'column-7',
+      'column-8',
+    ];
+  
+    // If moving within the same restricted column, prevent the move
+    if (isSameColumn && restrictedColumns.includes(fromColumnId)) {
+      return; // Do not allow moving within columns 2-8
+    }
+  
+  // Get the columns
+  const fromColumn = columns[fromColumnId];
+  const toColumn = columns[toColumnId];
 
-    if (over.id.startsWith('column-')) {
-      const activeCard =
-        hand.find((item) => item.code === active.id) ||
-        Object.values(columns).flatMap((col) => col.cards).find((item) => item.code === active.id);
+  // Get the active card
+  const activeCard = fromColumn.cards.find((item) => item.code === activeId);
 
-      if (!activeCard) return;
+  if (!activeCard) return;
 
-      const overColumn = columns[over.id].cards;
-      const lastCardInOverColumn = overColumn[overColumn.length - 1];
+  // Get the last card in the target column
+  const lastCardInToColumn = toColumn.cards[toColumn.cards.length - 1];
 
-      // Use CardCodetoValue for value comparison
-      if (lastCardInOverColumn) {
-        const activeCardValue = CardCodetoValue(activeCard.value);
-        const lastCardValue = CardCodetoValue(lastCardInOverColumn.value);
-        if (activeCardValue >= lastCardValue) return;
-      }
+  // If moving to a different column, enforce the rule
+  if (fromColumnId !== toColumnId) {
+    // Use CardCodetoValue for value comparison
+    if (lastCardInToColumn) {
+      const activeCardValue = CardCodetoValue(activeCard.value);
+      const lastCardValue = CardCodetoValue(lastCardInToColumn.value);
 
-      if (hand.some((item) => item.code === active.id)) {
-        // Moving from hand to column
-        const newHand = hand.filter((item) => item.code !== active.id);
-        const newOverColumnCards = [...overColumn, activeCard];
-        setHand(newHand);
-
-
-        
-        setColumns((prevColumns) => ({
-          ...prevColumns,
-          [over.id]: {
-            cards: newOverColumnCards,
-            lastCardValue: newOverColumnCards[newOverColumnCards.length - 1].value,
-          },
-        }));
-      } else {
-        // Moving from one column to another
-        const fromColumnId = Object.keys(columns).find((key) =>
-          columns[key].cards.some((item) => item.code === active.id)
-        );
-        if (!fromColumnId) return;
-        const newFromColumnCards = columns[fromColumnId].cards.filter((item) => item.code !== active.id);
-        const newOverColumnCards = [...overColumn, activeCard];
-        setColumns((prevColumns) => ({
-          ...prevColumns,
-          [fromColumnId]: {
-            cards: newFromColumnCards,
-            lastCardValue:
-              newFromColumnCards.length > 0
-                ? newFromColumnCards[newFromColumnCards.length - 1].value
-                : null,
-          },
-          [over.id]: {
-            cards: newOverColumnCards,
-            lastCardValue: newOverColumnCards[newOverColumnCards.length - 1].value,
-          },
-        }));
-        
+      // Only allow move if activeCardValue is less than lastCardValue
+      if (activeCardValue >= lastCardValue) {
+        // Invalid move, do not proceed
+        return;
       }
     }
+  }
 
-  };
+  // Proceed with the move
+  // Find the indexes of the active and over cards
+  const activeIndex = fromColumn.cards.findIndex((item) => item.code === activeId);
+  const overIndex = toColumn.cards.findIndex((item) => item.code === overId);
+
+  // Moving within the same column
+  if (fromColumnId === toColumnId) {
+    if (activeIndex !== overIndex) {
+      const newCards = arrayMove(fromColumn.cards, activeIndex, overIndex);
+
+      setColumns((prevColumns) => ({
+        ...prevColumns,
+        [fromColumnId]: {
+          cards: newCards,
+          lastCardValue: newCards[newCards.length - 1].value,
+        },
+      }));
+    }
+  } else {
+    // Moving to a different column
+    const newFromColumnCards = fromColumn.cards.filter((item) => item.code !== activeId);
+    const newToColumnCards = [...toColumn.cards, activeCard];
+
+    setColumns((prevColumns) => ({
+      ...prevColumns,
+      [fromColumnId]: {
+        cards: newFromColumnCards,
+        lastCardValue: newFromColumnCards.length
+          ? newFromColumnCards[newFromColumnCards.length - 1].value
+          : null,
+      },
+      [toColumnId]: {
+        cards: newToColumnCards,
+        lastCardValue: newToColumnCards[newToColumnCards.length - 1].value,
+      },
+    }));
+  }
+};
 
 
 
@@ -152,26 +195,63 @@ export const HandInfo = () => {
     }
   };
 
-  const Column = ({ id, children }) => {
+  const Column = ({ id, label, children }) => {
     const { isOver, setNodeRef } = useDroppable({
       id,
     });
+  
 
-    const style = {
-      border: isOver ? '2px solid green' : '2px dashed gray',
-    };
-
-    return (
-      <div ref={setNodeRef} className="card_column" style={style}>
-        {children}
-      </div>
-    );
+  const style = {
+    background: isOver ? 'lightblue' : 'white',
+    flex: 1,
+    minHeight: '300px', // Increased minHeight
+    padding: '15px',
+    margin: '1px',
+    position: 'relative', // Added relative positioning
   };
+
+  return (
+    <div ref={setNodeRef} className="card_column" style={style}>
+    <h3 style={{ textAlign: 'center' }}>{label}</h3>
+    {children}
+  </div>
+  );
+};
+
+
+const handleDragStart = (event) => {
+  const { active } = event;
+  const activeId = active.id;
+
+  // Find the active card
+  const activeCard =
+    hand.find((item) => item.code === activeId) ||
+    Object.values(columns)
+      .flatMap((col) => col.cards)
+      .find((item) => item.code === activeId);
+
+  setActiveDragItem(activeCard);
+};
+const handleDragCancel = () => {
+  setActiveDragItem(null);
+};
 
   return (
     <>
       {deck ? (
-        <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext 
+        collisionDetection={rectIntersection} 
+        onDragEnd={handleDragEnd} 
+        onDragStart={handleDragStart}
+        onDragCancel={handleDragCancel}
+        >
+
+            <DragOverlay>
+              {activeDragItem ? (
+                <Card id={activeDragItem.code} card={activeDragItem} />
+              ) : null}
+            </DragOverlay>
+
           <SortableContext items={hand.map(card => card.code)} strategy={horizontalListSortingStrategy}>
             <div className="hand" id="hand">
               {hand.map((card) => (
@@ -179,18 +259,37 @@ export const HandInfo = () => {
               ))}
             </div>
           </SortableContext>
+
           <DrawCardButton drawCard={drawCard} />
+
           <button onClick={createNewHand}>Create New Hand</button>
-          <div style={{ display: 'flex', marginTop: '20px' }}>
-            {Object.keys(columns).map((columnId) => (
-              <Column key={columnId} id={columnId}>
-                {columns[columnId].cards.map((card, index) => (
-                  <Card id={card.code} key={card.code} card={card} style={{ top: `${index * 20}px` }} />
+
+        <div style={{ display: 'flex', marginTop: '20px', alignItems: 'flex-start' }}>
+          {Object.keys(columns).map((columnId, index) => (
+            <SortableContext
+              key={columnId}
+              items={columns[columnId].cards.map((card) => card.code)}
+              strategy={verticalListSortingStrategy}
+            >
+              <Column id={columnId} label={`Column ${index + 1}`}>
+                {columns[columnId].cards.map((card, cardIndex) => (
+                  <Card
+                    id={card.code}
+                    key={card.code}
+                    card={card}
+                    style={{
+                      marginTop: `${-20 * cardIndex}px`,
+                      zIndex: cardIndex,
+                      position: 'relative',
+                    }}
+                  />
                 ))}
                 <p>Last Card Value: {columns[columnId].lastCardValue}</p>
               </Column>
-            ))}
-          </div>
+            </SortableContext>
+          ))}
+        </div>
+
         </DndContext>
       ) : (
         <p>Loading...</p>

@@ -10,12 +10,13 @@
 
 }
 .card_column {
-  border: 2px dashed gray;
+  border: 2px dashed rgb(180, 177, 189);
   padding: 1rem;
   min-height: 200px;
-  min-width: 200px;
+  min-width: 20px;
   flex: 1;
   position: relative;
+  gap: 1em;
 }
 
 .card {
@@ -25,7 +26,7 @@
   transition: transform 0.2s ease;
 }
 
-.card img {
-  width: 50px; /* Adjust the width as needed */
+.card-image {
+  width: auto; 
   height: auto;
 }
