@@ -19,7 +19,7 @@ export const DeckInfo = () => {
         <div>
           <p>Deck ID: {deck.deck_id}</p>
           <p>Remaining: {deck.remaining}</p>
-          <p>Shuffled: {deck.shuffled ? 'Yes' : 'No'}</p>
+          {/* <p>Shuffled: {deck.shuffled ? 'Yes' : 'No'}</p> */}
         </div>
       ) : (
         <p>Loading...</p>

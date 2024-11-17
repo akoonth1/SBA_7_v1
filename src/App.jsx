@@ -1,10 +1,10 @@
 import React from 'react';
 import './App.css';
-import DeckProvider from './components/DeckProvider'; // Corrected import path
-import HandProvider from './components/HandContext'; // Corrected import path
-import { HandInfo } from './pages/PlayerHand'; // Corrected import path
-import { DeckInfo } from './components/DeckInfo'; // Corrected import path
-import PlayArea from './pages/PlayArea'; // Corrected import path
+import DeckProvider from './components/DeckProvider'; 
+import HandProvider from './components/HandContext'; 
+import { HandInfo } from './pages/PlayerHand'; 
+import { DeckInfo } from './components/DeckInfo'; 
+import PlayArea from './pages/PlayArea';
 import { DndContext } from '@dnd-kit/core';
 
 function App() {

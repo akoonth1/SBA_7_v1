@@ -1,6 +1,3 @@
-
-
-
 import React, { useContext, useEffect, useState } from 'react';
 import { DeckContext } from '../components/DeckProvider';
 import { HandContext } from '../components/HandContext'; 
@@ -86,6 +83,7 @@ export const HandInfo = () => {
       return; // Do not allow moving within columns 2-8
     }
   
+
   // Get the columns
   const fromColumn = columns[fromColumnId];
   const toColumn = columns[toColumnId];
@@ -94,6 +92,14 @@ export const HandInfo = () => {
   const activeCard = fromColumn.cards.find((item) => item.code === activeId);
 
   if (!activeCard) return;
+
+  // Check if the active card is the last card in the restricted column
+  if (restrictedColumns.includes(fromColumnId)) {
+    const lastCardInFromColumn = fromColumn.cards[fromColumn.cards.length - 1];
+    if (activeCard.code !== lastCardInFromColumn.code) {
+      return; // Do not allow moving if the active card is not the last card in the restricted column
+    }
+  }
 
   // Get the last card in the target column
   const lastCardInToColumn = toColumn.cards[toColumn.cards.length - 1];
@@ -114,29 +120,11 @@ export const HandInfo = () => {
   }
 
   // Proceed with the move
-  // Find the indexes of the active and over cards
-  const activeIndex = fromColumn.cards.findIndex((item) => item.code === activeId);
-  const overIndex = toColumn.cards.findIndex((item) => item.code === overId);
+  const newFromColumnCards = fromColumn.cards.filter((item) => item.code !== activeId);
+  const newToColumnCards = [...toColumn.cards, activeCard];
 
-  // Moving within the same column
-  if (fromColumnId === toColumnId) {
-    if (activeIndex !== overIndex) {
-      const newCards = arrayMove(fromColumn.cards, activeIndex, overIndex);
-
-      setColumns((prevColumns) => ({
-        ...prevColumns,
-        [fromColumnId]: {
-          cards: newCards,
-          lastCardValue: newCards[newCards.length - 1].value,
-        },
-      }));
-    }
-  } else {
-    // Moving to a different column
-    const newFromColumnCards = fromColumn.cards.filter((item) => item.code !== activeId);
-    const newToColumnCards = [...toColumn.cards, activeCard];
-
-    setColumns((prevColumns) => ({
+  setColumns((prevColumns) => {
+    const updatedColumns = {
       ...prevColumns,
       [fromColumnId]: {
         cards: newFromColumnCards,
@@ -148,10 +136,20 @@ export const HandInfo = () => {
         cards: newToColumnCards,
         lastCardValue: newToColumnCards[newToColumnCards.length - 1].value,
       },
-    }));
-  }
-};
+    };
 
+    // Check if four columns have 13 cards
+    const columnsWith13Cards = Object.values(updatedColumns).filter(
+      (column) => column.cards.length === 13
+    ).length;
+
+    if (columnsWith13Cards >= 4) {
+      alert('You win!');
+    }
+
+    return updatedColumns;
+  });
+};
 
 
   const drawCard = async () => {
@@ -205,6 +203,7 @@ export const HandInfo = () => {
     background: isOver ? 'lightblue' : 'white',
     flex: 1,
     minHeight: '300px', // Increased minHeight
+    minWidth: '200px',
     padding: '15px',
     margin: '1px',
     position: 'relative', // Added relative positioning
@@ -236,11 +235,25 @@ const handleDragCancel = () => {
   setActiveDragItem(null);
 };
 
+// Custom collision detection strategy
+
+
+const customCollisionDetection = (args) => {
+    const rectIntersectionResult = rectIntersection(args);
+    const closestCenterResult = closestCenter(args);
+
+    // Combine the results of both strategies
+    return closestCenterResult.length > 0 ? closestCenterResult : rectIntersectionResult;
+  };
+  
+  
+  
+
   return (
     <>
       {deck ? (
         <DndContext 
-        collisionDetection={rectIntersection} 
+        collisionDetection={customCollisionDetection} 
         onDragEnd={handleDragEnd} 
         onDragStart={handleDragStart}
         onDragCancel={handleDragCancel}
@@ -264,7 +277,7 @@ const handleDragCancel = () => {
 
           <button onClick={createNewHand}>Create New Hand</button>
 
-        <div style={{ display: 'flex', marginTop: '20px', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', marginTop: '10px', alignItems: 'flex-start' }}>
           {Object.keys(columns).map((columnId, index) => (
             <SortableContext
               key={columnId}
@@ -278,7 +291,7 @@ const handleDragCancel = () => {
                     key={card.code}
                     card={card}
                     style={{
-                      marginTop: `${-20 * cardIndex}px`,
+                      marginTop: `${-75}px`,
                       zIndex: cardIndex,
                       position: 'relative',
                     }}
